@@ -325,6 +325,39 @@
     C: { low: 'Independent, flexible with rules', high: 'Precise, rule-following' },
   };
 
+  // Tailored explanations for why someone might dial a trait up or down
+  // between their Natural baseline and their Adaptive/work style.
+  const GAP_REASON = {
+    D: {
+      up: "client-facing and sales work often reward quick decisions and directness, so you bring out more assertiveness than you might in private.",
+      down: "you may be consciously softening a naturally blunt or forceful edge to keep client relationships smooth and collaborative.",
+      upImpact: ["Helps you push deals and decisions forward when things stall.", "Takes real energy to sustain if it's not your natural default \u2014 build in downtime.", "Can read as more confident or commanding than you feel internally."],
+      downImpact: ["Makes you easier to work with in situations that call for patience over force.", "Suppressing a strong natural drive for long stretches can be its own kind of tiring, even though it looks effortless from outside.", "Worth noticing where holding back may cost you a needed moment of directness."],
+      alignedImpact: ["This is a low-effort, consistent part of how you operate \u2014 you don't need to manage it.", "People experience the same version of you here whether you're relaxed or under pressure."],
+    },
+    I: {
+      up: "client-facing roles reward warmth and sociability, so you bring more of it forward than you might in a private setting.",
+      down: "you may be reining in enthusiasm to stay focused, or to avoid overwhelming more reserved clients and colleagues.",
+      upImpact: ["Helps you build rapport quickly and keep energy up in meetings and presentations.", "Performing extra warmth all day can be genuinely draining if it isn't your natural setting.", "Watch for over-promising in the moment to keep the mood positive."],
+      downImpact: ["Gives you more restraint and focus than your natural instinct alone would provide.", "Holding back natural enthusiasm for long periods can feel flat or effortful over time.", "Consider where a bit more of your natural warmth could actually help a relationship."],
+      alignedImpact: ["Your sociability is consistent \u2014 what people see socially is close to what they get at work.", "This makes you easy to read and predictable in a good way."],
+    },
+    S: {
+      up: "the role rewards patience and steadiness, so you consciously slow your pace and stay calm even when that's not your default rhythm.",
+      down: "the pace of the work pushes you to move faster and adapt more quickly than feels naturally comfortable.",
+      upImpact: ["Helps you stay composed through long transactions or difficult conversations.", "Deliberately staying calm when you're naturally more restless takes real effort \u2014 protect recovery time.", "Can make you seem more unshakeable than you actually feel internally."],
+      downImpact: ["Builds real adaptability and comfort with change over time.", "Constantly overriding a natural preference for stability can add up to quiet stress.", "Worth protecting some predictable routine outside of work to balance it out."],
+      alignedImpact: ["Your pace at work matches your natural rhythm \u2014 a genuinely sustainable fit.", "You're unlikely to feel pulled between two different versions of yourself here."],
+    },
+    C: {
+      up: "the work demands more precision and process than comes naturally, so you consciously slow down and double-check more than you would otherwise.",
+      down: "you may be consciously loosening your grip on process and detail to move at the pace the role requires.",
+      upImpact: ["Produces more consistent, defensible work than your natural instinct alone would.", "Extra vigilance takes energy \u2014 it's normal to feel more depleted after detail-heavy days.", "Can come across as more meticulous than you feel like being."],
+      downImpact: ["Lets you move faster and stay more flexible than your natural instinct would allow.", "Loosening a strong natural preference for precision can quietly build tension over time.", "Consider protecting a little extra review time on your highest-stakes work."],
+      alignedImpact: ["Your attention to detail is consistent whether or not anyone's watching.", "This is a dependable, low-effort strength rather than something you have to switch on."],
+    },
+  };
+
   const REPORT = {
     D: {
       insights: [
@@ -777,7 +810,7 @@
     }
     function spacer(h) { y += h; }
     function checkPageBreak(needed) {
-      if (y + needed > 740) { doc.addPage(); y = 56; }
+      if (y + needed > 736) { doc.addPage(); y = 64; }
     }
     function divider() {
       doc.setDrawColor('#e4e1d8');
@@ -792,131 +825,263 @@
       doc.text(text.toUpperCase(), margin, y);
       y += 14;
     }
-    function comboBars(nPcts, aPcts) {
-      // Axis scale reference (0/50/100) drawn once above the bars
-      const barX0 = margin + 90;
-      const barW0 = usableW - 90 - 46;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      doc.setTextColor('#9a988f');
-      [0, 50, 100].forEach(v => {
-        const gx = barX0 + barW0 * (v / 100);
-        doc.text(String(v), gx - 4, y - 4);
-      });
-      y += 4;
-
-      ['D','I','S','C'].forEach(k => {
-        checkPageBreak(42);
-        const barX = margin + 90;
-        const barW = usableW - 90 - 46;
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(11);
-        doc.setTextColor('#1c1d2b');
-        doc.text(TRAIT_META[k].name, margin, y + 8);
-
-        doc.setFillColor('#e4e1d8');
-        doc.rect(barX, y, barW, 8, 'F');
-        doc.setFillColor(TRAIT_META[k].hex);
-        doc.rect(barX, y, barW * (nPcts[k] / 100), 8, 'F');
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(8.5);
-        doc.setTextColor('#6b6a75');
-        doc.text('Natural ' + nPcts[k] + '%', barX + barW + 8, y + 7);
-
-        doc.setFillColor('#e4e1d8');
-        doc.rect(barX, y + 12, barW, 8, 'F');
-        doc.setFillColor('#9a988f');
-        doc.rect(barX, y + 12, barW * (aPcts[k] / 100), 8, 'F');
-        doc.text('Adaptive ' + aPcts[k] + '%', barX + barW + 8, y + 19);
-
-        y += 34;
-      });
-
-      // legend
-      checkPageBreak(16);
-      doc.setFillColor('#8a8896');
-      doc.rect(margin + 90, y, 8, 8, 'F');
-      doc.setFontSize(8.5);
-      doc.setTextColor('#6b6a75');
-      doc.text('Colored bar = Natural     Gray bar = Adaptive', margin + 102, y + 7);
-      y += 18;
+    function hexToRgb(hex) {
+      hex = hex.replace('#', '');
+      return [parseInt(hex.substr(0,2),16), parseInt(hex.substr(2,2),16), parseInt(hex.substr(4,2),16)];
+    }
+    function blendRgb(hexA, hexB) {
+      const a = hexToRgb(hexA), b = hexToRgb(hexB);
+      return [Math.round((a[0]+b[0])/2), Math.round((a[1]+b[1])/2), Math.round((a[2]+b[2])/2)];
+    }
+    function withOpacity(fn, opacity) {
+      try {
+        doc.saveGraphicsState();
+        doc.setGState(new doc.GState({ opacity }));
+        fn();
+        doc.restoreGraphicsState();
+      } catch (e) {
+        fn();
+      }
     }
 
-    // Quadrant map: plots all four traits on a Task/People x Active/Reserved
-    // grid, connected into a single shape — the classic DISC "universal
-    // behavior model" view, redrawn with original styling.
-    function quadrantChart(pcts, label) {
-      checkPageBreak(260);
-      const size = 190;
+    // Full-page bar graph: all four traits, Natural vs Adaptive side by side.
+    function diamondIcon(cx, cy, r, hex, letter) {
+      const pts = [[cx, cy - r], [cx + r, cy], [cx, cy + r], [cx - r, cy]];
+      const segs = [];
+      for (let i = 1; i < pts.length; i++) segs.push([pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]]);
+      segs.push([pts[0][0]-pts[3][0], pts[0][1]-pts[3][1]]);
+      doc.setFillColor(hex);
+      doc.lines(segs, pts[0][0], pts[0][1], [1, 1], 'F', true);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.setTextColor('#ffffff');
+      doc.text(letter, cx, cy + 4, { align: 'center' });
+    }
+
+    // Executive Summary page: vertical column chart (Natural vs Adaptive per
+    // trait), diamond icons with the two scores, and a two-column explanation
+    // of what "Natural" and "Adaptive" mean — all on one page.
+    function executiveSummaryPage(nat, ada) {
+      heading('Natural and Adaptive Styles Comparison', 14);
+      spacer(12);
+
+      const chartH = 190;
+      const axisX = margin + 26;
+      const chartW = usableW - 26;
+      const y0 = y;
+      const baseline = y0 + chartH;
+
+      doc.setDrawColor('#e9e6dc');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor('#9a988f');
+      for (let v = 0; v <= 100; v += 10) {
+        const gy = baseline - (v / 100) * chartH;
+        doc.line(axisX, gy, axisX + chartW, gy);
+        doc.text(String(v), axisX - 16, gy + 2);
+      }
+
+      const groupW = chartW / 4;
+      const barW = 30;
+      ['D','I','S','C'].forEach((k, i) => {
+        const gx = axisX + groupW * i;
+        const center = gx + groupW / 2;
+        const natX = center - barW - 3;
+        const adaX = center + 3;
+        const natH = (nat.pcts[k] / 100) * chartH;
+        const adaH = (ada.pcts[k] / 100) * chartH;
+
+        doc.setFillColor(TRAIT_META[k].hex);
+        doc.rect(natX, baseline - natH, barW, natH, 'F');
+        doc.setFillColor('#9a988f');
+        doc.rect(adaX, baseline - adaH, barW, adaH, 'F');
+
+        diamondIcon(center, baseline + 30, 17, TRAIT_META[k].hex, k);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor('#1c1d2b');
+        doc.text(nat.pcts[k] + ' / ' + ada.pcts[k], center, baseline + 58, { align: 'center' });
+      });
+
+      y = baseline + 78;
+      doc.setFillColor(TRAIT_META.D.hex);
+      doc.rect(margin, y, 10, 10, 'F');
+      doc.setFontSize(9);
+      doc.setTextColor('#6b6a75');
+      doc.text('Colored bar = Natural', margin + 16, y + 8);
+      doc.setFillColor('#9a988f');
+      doc.rect(margin + 150, y, 10, 10, 'F');
+      doc.text('Gray bar = Adaptive', margin + 166, y + 8);
+      y += 26;
+      divider();
+
+      const gutter = 20;
+      const colW = (usableW - gutter) / 2;
+      const leftX = margin;
+      const rightX = margin + colW + gutter;
+      const yTop = y;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11.5);
+      doc.setTextColor('#1c1d2b');
+      doc.text('Natural Style:', leftX, yTop);
+      doc.text('Adaptive Style:', rightX, yTop);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      doc.setTextColor('#33323d');
+      const natDesc = 'How you behave when you\'re operating on instinct \u2014 your baseline under low stress, and the mode you naturally return to. Leaning into this style tends to feel comfortable and low-effort.';
+      const adaDesc = 'How you behave when you\'re consciously aware of the situation, or adjusting for what a role expects. Staying in this mode for long stretches, if it differs a lot from your natural style, can be tiring to sustain.';
+
+      const leftLines = doc.splitTextToSize(natDesc, colW);
+      const rightLines = doc.splitTextToSize(adaDesc, colW);
+      let ly = yTop + 16, ry = yTop + 16;
+      leftLines.forEach(line => { doc.text(line, leftX, ly); ly += 13; });
+      rightLines.forEach(line => { doc.text(line, rightX, ry); ry += 13; });
+      y = Math.max(ly, ry) + 6;
+    }
+
+    // Full-page quadrant map: plots BOTH Natural and Adaptive shapes on a
+    // Task/People x Active/Reserved grid, with colored corner regions and
+    // numbered scale ticks — the classic DISC "universal behavior model"
+    // view, redrawn with original styling and colors.
+    function quadrantChartFullPage(natPcts, adaPcts) {
+      doc.addPage();
+      y = 64;
+      sectionLabel('Behavioral Style Map');
+      heading('Where You Fall: Task vs. People, Active vs. Reserved', 16);
+      spacer(8);
+      bodyText('This map plots all four traits at once. The four corners are D, I, S, and C; the farther a point sits from the center, the more strongly that trait shows up. Your Natural style (solid, filled) and Adaptive style (dashed) are both plotted so you can see how they compare.', { size: 10 });
+      spacer(16);
+
+      const size = 320;
       const x0 = margin + (usableW - size) / 2;
-      const y0 = y + 10;
+      const y0 = y;
       const cx = x0 + size / 2;
       const cy = y0 + size / 2;
+      const corners = { D: [x0, y0], I: [x0 + size, y0], S: [x0 + size, y0 + size], C: [x0, y0 + size] };
+      const center = [cx, cy];
 
-      doc.setDrawColor('#c9c6ba');
-      doc.setLineWidth(1);
+      // Soft colored corner regions (approximate gradient via blended triangles)
+      withOpacity(() => {
+        doc.setFillColor(...blendRgb(TRAIT_META.D.hex, TRAIT_META.I.hex));
+        doc.triangle(corners.D[0], corners.D[1], corners.I[0], corners.I[1], center[0], center[1], 'F');
+      }, 0.25);
+      withOpacity(() => {
+        doc.setFillColor(...blendRgb(TRAIT_META.I.hex, TRAIT_META.S.hex));
+        doc.triangle(corners.I[0], corners.I[1], corners.S[0], corners.S[1], center[0], center[1], 'F');
+      }, 0.25);
+      withOpacity(() => {
+        doc.setFillColor(...blendRgb(TRAIT_META.S.hex, TRAIT_META.C.hex));
+        doc.triangle(corners.S[0], corners.S[1], corners.C[0], corners.C[1], center[0], center[1], 'F');
+      }, 0.25);
+      withOpacity(() => {
+        doc.setFillColor(...blendRgb(TRAIT_META.C.hex, TRAIT_META.D.hex));
+        doc.triangle(corners.C[0], corners.C[1], corners.D[0], corners.D[1], center[0], center[1], 'F');
+      }, 0.25);
+
+      doc.setDrawColor('#8f8c80');
+      doc.setLineWidth(1.3);
       doc.rect(x0, y0, size, size);
-      doc.setDrawColor('#e9e6dc');
+      doc.setDrawColor('#c9c6ba');
+      doc.setLineWidth(0.7);
       doc.line(x0, y0, x0 + size, y0 + size);
       doc.line(x0 + size, y0, x0, y0 + size);
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      doc.setTextColor('#9a988f');
-      doc.text('ACTIVE', cx, y0 - 8, { align: 'center' });
-      doc.text('RESERVED', cx, y0 + size + 14, { align: 'center' });
-      doc.text('TASK', x0 - 6, cy, { align: 'right' });
-      doc.text('PEOPLE', x0 + size + 6, cy);
+      // Numbered scale ticks along each diagonal (10-90), matching where points plot
+      ['D','I','S','C'].forEach(k => {
+        const [ccx, ccy] = corners[k];
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6.5);
+        doc.setTextColor('#9a988f');
+        for (let v = 10; v <= 90; v += 10) {
+          const t = v / 100;
+          const tx = cx + (ccx - cx) * t;
+          const ty = cy + (ccy - cy) * t;
+          doc.text(String(v), tx, ty, { align: 'center' });
+        }
+      });
 
-      const corners = { D: [x0, y0], I: [x0 + size, y0], S: [x0 + size, y0 + size], C: [x0, y0 + size] };
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor('#6b6a75');
+      doc.text('ACTIVE', cx, y0 - 10, { align: 'center' });
+      doc.text('RESERVED', cx, y0 + size + 16, { align: 'center' });
+      doc.text('TASK', x0 - 8, cy, { align: 'right' });
+      doc.text('PEOPLE', x0 + size + 8, cy);
+
       ['D','I','S','C'].forEach(k => {
         const [ccx, ccy] = corners[k];
         doc.setFillColor(TRAIT_META[k].hex);
-        doc.circle(ccx, ccy, 9, 'F');
+        doc.circle(ccx, ccy, 12, 'F');
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
+        doc.setFontSize(11);
         doc.setTextColor('#ffffff');
-        doc.text(k, ccx, ccy + 3, { align: 'center' });
+        doc.text(k, ccx, ccy + 4, { align: 'center' });
       });
 
-      const points = ['D','I','S','C'].map(k => {
-        const [ccx, ccy] = corners[k];
-        const t = pcts[k] / 100;
-        return [cx + (ccx - cx) * t, cy + (ccy - cy) * t];
-      });
-      const segs = [];
-      for (let i = 1; i < points.length; i++) {
-        segs.push([points[i][0] - points[i-1][0], points[i][1] - points[i-1][1]]);
+      function shapeFor(pcts) {
+        return ['D','I','S','C'].map(k => {
+          const [ccx, ccy] = corners[k];
+          const t = pcts[k] / 100;
+          return [cx + (ccx - cx) * t, cy + (ccy - cy) * t];
+        });
       }
-      segs.push([points[0][0] - points[points.length-1][0], points[0][1] - points[points.length-1][1]]);
-      doc.setFillColor(59, 111, 141);
-      try {
-        doc.saveGraphicsState();
-        doc.setGState(new doc.GState({ opacity: 0.35 }));
-        doc.lines(segs, points[0][0], points[0][1], [1, 1], 'F', true);
-        doc.restoreGraphicsState();
-      } catch (e) {
-        // fallback if GState isn't supported in this build
-        doc.lines(segs, points[0][0], points[0][1], [1, 1], 'F', true);
+      function segsFor(points) {
+        const segs = [];
+        for (let i = 1; i < points.length; i++) segs.push([points[i][0]-points[i-1][0], points[i][1]-points[i-1][1]]);
+        segs.push([points[0][0]-points[points.length-1][0], points[0][1]-points[points.length-1][1]]);
+        return segs;
       }
-      doc.setDrawColor('#2b6f77');
-      doc.setLineWidth(1.4);
-      doc.lines(segs, points[0][0], points[0][1], [1, 1], 'S', true);
 
-      points.forEach((p, i) => {
-        const k = ['D','I','S','C'][i];
+      const natPoints = shapeFor(natPcts);
+      const adaPoints = shapeFor(adaPcts);
+
+      // Natural: filled solid shape
+      withOpacity(() => {
+        doc.setFillColor(43, 111, 119);
+        doc.lines(segsFor(natPoints), natPoints[0][0], natPoints[0][1], [1,1], 'F', true);
+      }, 0.30);
+      doc.setDrawColor(43, 111, 119);
+      doc.setLineWidth(1.8);
+      doc.lines(segsFor(natPoints), natPoints[0][0], natPoints[0][1], [1,1], 'S', true);
+
+      // Adaptive: dashed outline only
+      doc.setDrawColor(120, 90, 40);
+      doc.setLineWidth(1.6);
+      try { doc.setLineDashPattern([4, 3], 0); } catch (e) {}
+      doc.lines(segsFor(adaPoints), adaPoints[0][0], adaPoints[0][1], [1,1], 'S', true);
+      try { doc.setLineDashPattern([], 0); } catch (e) {}
+
+      // Data point markers + numbers
+      ['D','I','S','C'].forEach((k, i) => {
+        const np = natPoints[i], ap = adaPoints[i];
         doc.setFillColor(TRAIT_META[k].hex);
-        doc.circle(p[0], p[1], 3, 'F');
+        doc.circle(np[0], np[1], 8, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor('#ffffff');
+        doc.text(String(natPcts[k]), np[0], np[1] + 2.5, { align: 'center' });
+
+        doc.setDrawColor(120, 90, 40);
+        doc.setFillColor(255, 255, 255);
+        doc.circle(ap[0], ap[1], 8, 'FD');
+        doc.setTextColor(120, 90, 40);
+        doc.text(String(adaPcts[k]), ap[0], ap[1] + 2.5, { align: 'center' });
       });
 
-      y = y0 + size + 26;
-      if (label) {
-        doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
-        doc.setTextColor('#6b6a75');
-        doc.text(label, margin, y, { maxWidth: usableW });
-        y += 14;
-      }
+      y = y0 + size + 34;
+      doc.setFillColor(43, 111, 119);
+      doc.circle(margin + 6, y - 3, 5, 'F');
+      doc.setFontSize(9);
+      doc.setTextColor('#6b6a75');
+      doc.text('Natural (filled, solid line)', margin + 16, y);
+      doc.setDrawColor(120, 90, 40);
+      doc.setFillColor(255, 255, 255);
+      doc.circle(margin + 190, y - 3, 5, 'FD');
+      doc.text('Adaptive (dashed line)', margin + 200, y);
+      y += 16;
     }
 
     // Low <-> High spectrum gauge for a single trait score.
@@ -937,13 +1102,12 @@
       y = gy + 26;
     }
 
-
     function traitChart(k, natPct, adaPct) {
       checkPageBreak(108);
-      const chartH = 78;
+      const chartH = 100;
       const chartTop = y;
       const axisX = margin + 26;
-      const chartW = 120;
+      const chartW = 140;
       const baseline = chartTop + chartH;
 
       doc.setDrawColor('#e4e1d8');
@@ -956,8 +1120,8 @@
         doc.text(String(v), axisX - 14, gy + 2);
       });
 
-      const barW = 22;
-      const gap = 16;
+      const barW = 26;
+      const gap = 18;
       const natX = axisX + chartW / 2 - barW - gap / 2;
       const adaX = axisX + chartW / 2 + gap / 2;
       const natH = (natPct / 100) * chartH;
@@ -1021,11 +1185,238 @@
       y = Math.max(yLeftEnd, yRightEnd) + 6;
     }
 
+    // Dedicated full page for a single trait: numbers, chart, natural-vs-adaptive
+    // analysis, insights, mini strengths/watch-outs, and the spectrum gauge.
+    function traitPage(k, nat, ada) {
+      doc.addPage();
+      y = 64;
+      doc.setFillColor(TRAIT_META[k].hex);
+      doc.rect(margin, y, usableW, 34, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(18);
+      doc.setTextColor('#ffffff');
+      doc.text(TRAIT_META[k].name, margin + 14, y + 23);
+      doc.setFontSize(13);
+      doc.text('Natural ' + nat.pcts[k] + '%  /  Adaptive ' + ada.pcts[k] + '%', margin + usableW - 14, y + 23, { align: 'right' });
+      y += 50;
 
-    doc.setFillColor('#1c1d2b');
-    doc.rect(0, 0, pageW, 48, 'F');
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(16);
+      // ---- Top half: general description of this trait ----
+      const textX = margin + 160;
+      const textW = usableW - 160;
+      const chartStartY = y;
+      const chartInfo = traitChart(k, nat.pcts[k], ada.pcts[k]);
+
+      let ty = chartStartY;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10.5);
+      doc.setTextColor('#33323d');
+      const blurbLines = doc.splitTextToSize(TRAIT_META[k].blurb, textW);
+      blurbLines.forEach(line => { doc.text(line, textX, ty); ty += 14; });
+      ty += 8;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9.5);
+      REPORT[k].insights.slice(0, 4).forEach(text => {
+        const lines = doc.splitTextToSize(text, textW - 14);
+        doc.text('\u2022', textX, ty);
+        lines.forEach(line => { doc.text(line, textX + 10, ty); ty += 12.5; });
+        ty += 2;
+      });
+
+      y = Math.max(chartInfo.chartBottom, ty) + 16;
+      divider();
+
+      // ---- Second half: dedicated Natural vs. Adaptive analysis ----
+      sectionLabel('Natural vs. Adaptive');
+      heading('What Changes for You Here \u2014 and What It Means', 13);
+      spacer(8);
+
+      const diff = ada.pcts[k] - nat.pcts[k];
+      const reason = GAP_REASON[k];
+      let leadText, impactList;
+      if (Math.abs(diff) <= 4) {
+        leadText = 'Your natural and adaptive scores for ' + TRAIT_META[k].name + ' are closely aligned (within ' + Math.abs(diff) + ' pts). ' +
+          'That means this trait shows up the same way whether you\'re relaxed or "on" \u2014 you\'re not consciously managing it in professional settings.';
+        impactList = reason.alignedImpact;
+      } else if (diff > 0) {
+        leadText = 'At work, you lead with ' + diff + ' points more ' + TRAIT_META[k].name + ' than feels naturally instinctive. ' +
+          'This is common when ' + reason.up;
+        impactList = reason.upImpact;
+      } else {
+        leadText = 'Your natural instinct toward ' + TRAIT_META[k].name + ' runs ' + Math.abs(diff) + ' points higher than how you typically show up at work. ' +
+          'This is common when ' + reason.down;
+        impactList = reason.downImpact;
+      }
+      bodyText(leadText, { size: 10 });
+      spacer(6);
+      bodyText('What this means in practice:', { bold: true, size: 10 });
+      spacer(2);
+      impactList.forEach(bullet);
+      spacer(10);
+
+      twoColBullets(
+        'Strengths', '#3f8f6a', REPORT[k].strengths.slice(0, 4),
+        'Watch-outs', '#d9483d', REPORT[k].weaknesses.slice(0, 4)
+      );
+      spacer(14);
+      spectrumGauge(k, ada.pcts[k]);
+    }
+
+    // Full-page trait spectrum reference: four columns (D/I/S/C), each with an
+    // original ordered list of descriptive words from "High" to "Low", plus a
+    // marker showing exactly where this person's Adaptive score falls.
+    function traitLadderPage(nat, ada) {
+      doc.addPage();
+      y = 64;
+      sectionLabel('Trait Spectrum Reference');
+      heading('A Closer Look at the Four Components of Your Behavioral Style', 13);
+      spacer(16);
+
+      const SUBMETA = {
+        D: { cat: 'Problems:', desc: 'How you tend to approach problems and make decisions' },
+        I: { cat: 'People:', desc: 'How you tend to interact with others and share opinions' },
+        S: { cat: 'Pace:', desc: 'How you tend to pace things in your environment' },
+        C: { cat: 'Procedures:', desc: 'Your preference for established process and standards' },
+      };
+      const LADDER = {
+        D: ['Decisive','Driving','Forceful','Daring','Determined','Competitive','Assertive','Independent','Conservative','Mild','Agreeable','Unassuming'],
+        I: ['Gregarious','Persuasive','Inspiring','Enthusiastic','Sociable','Charming','Convincing','Expressive','Reflective','Matter-of-fact','Withdrawn','Reserved'],
+        S: ['Patient','Predictable','Steady','Consistent','Supportive','Dependable','Calm','Cooperative','Outgoing','Restless','Active','Spontaneous'],
+        C: ['Precise','Systematic','Careful','Analytical','Orderly','Disciplined','Balanced','Flexible','Casual','Improvisational','Unstructured','Impulsive'],
+      };
+
+      const traits = ['D','I','S','C'];
+      const colW = usableW / 4;
+      const x0 = margin;
+      const topY = y;
+      const headerH = 30;
+      const subHeaderH = 50;
+
+      traits.forEach((k, i) => {
+        const cx0 = x0 + colW * i;
+        doc.setFillColor(TRAIT_META[k].hex);
+        doc.rect(cx0, topY, colW, headerH, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12.5);
+        doc.setTextColor('#ffffff');
+        doc.text(TRAIT_META[k].name, cx0 + colW / 2, topY + headerH / 2 + 4, { align: 'center' });
+      });
+
+      const subY = topY + headerH;
+      traits.forEach((k, i) => {
+        const cx0 = x0 + colW * i;
+        doc.setFillColor('#f3f1ea');
+        doc.rect(cx0, subY, colW, subHeaderH, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor('#4a4952');
+        doc.text(SUBMETA[k].cat, cx0 + colW / 2, subY + 14, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.2);
+        doc.setTextColor('#6b6a75');
+        const lines = doc.splitTextToSize(SUBMETA[k].desc, colW - 16);
+        let ly = subY + 26;
+        lines.forEach(l => { doc.text(l, cx0 + colW / 2, ly, { align: 'center' }); ly += 9; });
+      });
+
+      const ladderTop = subY + subHeaderH + 16;
+      const ladderH = 320;
+      const listTop = ladderTop + 16;
+      const listBottom = ladderTop + ladderH - 16;
+
+      traits.forEach((k, i) => {
+        const cx0 = x0 + colW * i;
+        const cx = cx0 + colW / 2;
+        const words = LADDER[k];
+        const scoreYNat = listTop + (1 - nat.pcts[k] / 100) * (listBottom - listTop);
+        const scoreYAda = listTop + (1 - ada.pcts[k] / 100) * (listBottom - listTop);
+        const shadeTop = ladderTop - 12;
+
+        // Soft color fill from the "High" end down to the Natural score,
+        // drawn first so the word list stays fully legible on top of it.
+        withOpacity(() => {
+          doc.setFillColor(...hexToRgb(TRAIT_META[k].hex));
+          doc.rect(cx0 + 3, shadeTop, colW - 6, scoreYNat - shadeTop, 'F');
+        }, 0.16);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor(TRAIT_META[k].hex);
+        doc.text('High ' + k, cx, ladderTop, { align: 'center' });
+
+        const step = (listBottom - listTop) / (words.length - 1);
+        words.forEach((w, wi) => {
+          const wy = listTop + step * wi;
+          doc.setFont('helvetica', (wi === 0 || wi === words.length - 1) ? 'bold' : 'normal');
+          doc.setFontSize(8.3);
+          doc.setTextColor(wi === 0 ? TRAIT_META[k].hex : (wi === words.length - 1 ? '#9a988f' : '#33323d'));
+          doc.text(w, cx, wy, { align: 'center' });
+        });
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9.5);
+        doc.setTextColor('#9a988f');
+        doc.text('Low ' + k, cx, ladderTop + ladderH, { align: 'center' });
+
+        // Natural: solid line + label on the left
+        doc.setDrawColor(TRAIT_META[k].hex);
+        doc.setLineWidth(1.3);
+        doc.line(cx0 + 6, scoreYNat, cx0 + colW - 6, scoreYNat);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.3);
+        doc.setTextColor(TRAIT_META[k].hex);
+        doc.text('N ' + nat.pcts[k] + '%', cx0 + 8, scoreYNat - 4, { align: 'left' });
+
+        // Adaptive: dashed line + label on the right
+        doc.setDrawColor(120, 90, 40);
+        doc.setLineWidth(1.3);
+        try { doc.setLineDashPattern([3, 2], 0); } catch (e) {}
+        doc.line(cx0 + 6, scoreYAda, cx0 + colW - 6, scoreYAda);
+        try { doc.setLineDashPattern([], 0); } catch (e) {}
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.3);
+        doc.setTextColor(120, 90, 40);
+        doc.text('A ' + ada.pcts[k] + '%', cx0 + colW - 8, scoreYAda - 4, { align: 'right' });
+      });
+
+      doc.setDrawColor('#1c1d2b');
+      doc.setLineWidth(1);
+      doc.rect(x0, topY, usableW, (ladderTop + ladderH) - topY);
+      for (let i = 1; i < 4; i++) {
+        doc.line(x0 + colW * i, topY, x0 + colW * i, ladderTop + ladderH);
+      }
+
+      y = ladderTop + ladderH + 20;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor('#1c1d2b');
+      doc.text('N', margin, y);
+      doc.setDrawColor('#9a988f');
+      doc.setLineWidth(1.3);
+      doc.line(margin + 12, y - 3, margin + 30, y - 3);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor('#6b6a75');
+      doc.text('= Natural (shaded fill + solid line)', margin + 36, y);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor('#1c1d2b');
+      doc.text('A', margin + 230, y);
+      try { doc.setLineDashPattern([3, 2], 0); } catch (e) {}
+      doc.line(margin + 242, y - 3, margin + 260, y - 3);
+      try { doc.setLineDashPattern([], 0); } catch (e) {}
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor('#6b6a75');
+      doc.text('= Adaptive (dashed line)', margin + 266, y);
+      y += 16;
+
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8.5);
+      doc.setTextColor('#6b6a75');
+      doc.text('Shading runs from the High end down to your Natural score. The dashed line marks your Adaptive (at-work) score on the same spectrum.', margin, y, { maxWidth: usableW });
+    }
+
+
     doc.setTextColor('#f6f4ef');
     doc.text('DISC Behavioral Style Report', margin, 31);
     y = 84;
@@ -1040,71 +1431,37 @@
     }
     spacer(10);
 
-    sectionLabel('Executive Summary');
-    heading('Natural and Adaptive Styles Comparison', 15);
+    sectionLabel('Overview');
+    heading('Your Behavioral Style, At a Glance', 15);
     spacer(6);
-    bodyText('Your Natural style is your baseline tendency \u2014 how you operate before adjusting to a role or situation. Your Adaptive style is what you lead with day to day, adjusted for what the job demands. A large gap between the two is often effective, but can be tiring to sustain over time.', { size: 10 });
-    spacer(8);
-    comboBars(nat.pcts, ada.pcts);
+    bodyText('Your Natural style is your baseline tendency \u2014 how you operate before adjusting to a role or situation. Your Adaptive style is what you lead with day to day, adjusted for what the job demands. This report analyzes both throughout: each section looks at how your instinctive baseline compares to how you actually show up at work.', { size: 10 });
     spacer(10);
     bodyText('Your natural style leans ' + TRAIT_META[natTop].name + (nat.gapClose ? '/' + TRAIT_META[natSecond].name : '') +
       '. Your adaptive, at-work style leans ' + TRAIT_META[adaTop].name + (ada.gapClose ? '/' + TRAIT_META[adaSecond].name : '') + '.', { bold: true, size: 11 });
-    spacer(10);
-    checkPageBreak(280);
-    heading('Where you fall: Task vs. People, Active vs. Reserved', 12);
-    spacer(4);
-    quadrantChart(nat.pcts, 'Plotted using your Natural style scores. Traits closer to a corner are more strongly expressed; the shape shows how the four traits balance against each other.');
-    spacer(4);
-    divider();
+    spacer(14);
 
-    checkPageBreak(60);
-    sectionLabel('Four Components of Behavior');
-    heading('A closer look at your adaptive (work) style', 15);
-    spacer(6);
-    ['D','I','S','C'].forEach(k => {
-      checkPageBreak(190);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12.5);
-      doc.setTextColor(TRAIT_META[k].hex);
-      doc.text(TRAIT_META[k].name, margin, y);
-      y += 14;
+    // Executive Summary chart, diamonds, and Natural/Adaptive explanation — same page
+    executiveSummaryPage(nat, ada);
 
-      const textX = margin + 150;
-      const textW = usableW - 150;
-      const chartStartY = y;
-      const chartInfo = traitChart(k, nat.pcts[k], ada.pcts[k]);
-      const chartBottom = chartInfo.chartBottom;
+    // Dedicated full page: quadrant map with both Natural and Adaptive shapes
+    quadrantChartFullPage(nat.pcts, ada.pcts);
 
-      let ty = chartStartY;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      doc.setTextColor('#33323d');
-      const blurbLines = doc.splitTextToSize(TRAIT_META[k].blurb, textW);
-      blurbLines.forEach(line => { doc.text(line, textX, ty); ty += 13.5; });
-      ty += 4;
-      doc.setFontSize(9.5);
-      REPORT[k].insights.slice(0, 3).forEach(text => {
-        const lines = doc.splitTextToSize(text, textW - 14);
-        doc.text('\u2022', textX, ty);
-        lines.forEach(line => { doc.text(line, textX + 10, ty); ty += 12.5; });
-        ty += 2;
-      });
+    // Dedicated full page: trait spectrum reference (word ladder + score markers)
+    traitLadderPage(nat, ada);
 
-      y = Math.max(chartBottom, ty) + 8;
-      spectrumGauge(k, ada.pcts[k]);
-      spacer(6);
-    });
-    divider();
+    // Dedicated page per trait
+    ['D','I','S','C'].forEach(k => traitPage(k, nat, ada));
 
-    checkPageBreak(80);
+    doc.addPage();
+    y = 64;
     sectionLabel('Ideas for Being More Effective');
     heading('What helps you do your best work', 14);
-    spacer(4);
+    spacer(8);
     bodyText('Based on your adaptive style, you tend to be more effective with:', { size: 10, color: '#6b6a75' });
-    spacer(2);
+    spacer(6);
     REPORT[adaTop].effective.forEach(bullet);
     if (ada.gapClose) REPORT[adaSecond].effective.slice(0, 2).forEach(bullet);
-    spacer(6);
+    spacer(16);
     divider();
 
     checkPageBreak(140);
@@ -1114,49 +1471,54 @@
     const strengthsList = REPORT[adaTop].strengths.concat(ada.gapClose ? REPORT[adaSecond].strengths.slice(0, 2) : []);
     const weaknessesList = REPORT[adaTop].weaknesses.concat(ada.gapClose ? REPORT[adaSecond].weaknesses.slice(0, 2) : []);
     twoColBullets('Strengths', '#3f8f6a', strengthsList, 'Watch-outs', '#d9483d', weaknessesList);
-    spacer(6);
+    spacer(16);
     divider();
 
     checkPageBreak(100);
     sectionLabel('Communication Insights for Others');
     heading('How others can communicate with ' + (reportName || 'you') + ' effectively', 13);
-    spacer(6);
+    spacer(8);
     bodyText('Things to do:', { bold: true, size: 10.5 });
+    spacer(2);
     REPORT[adaTop].doThis.forEach(bullet);
-    spacer(4);
-    bodyText('Things to avoid:', { bold: true, size: 10.5 });
-    REPORT[adaTop].dontThis.forEach(bullet);
     spacer(6);
+    bodyText('Things to avoid:', { bold: true, size: 10.5 });
+    spacer(2);
+    REPORT[adaTop].dontThis.forEach(bullet);
+    spacer(16);
     divider();
 
     checkPageBreak(60);
     sectionLabel('Natural vs. Adaptive Gap');
+    spacer(4);
     const up = gaps.slice().sort((a,b) => b.diff - a.diff)[0];
     const down = gaps.slice().sort((a,b) => a.diff - b.diff)[0];
     bodyText('On average, your scores shift about ' + Math.round(overallShift) + ' points per trait between your natural baseline and your adaptive/work style. At work, you dial UP ' +
       TRAIT_META[up.k].name + ' (' + (up.diff >= 0 ? '+' : '') + up.diff + ' pts) and dial DOWN ' + TRAIT_META[down.k].name + ' (' + (down.diff >= 0 ? '+' : '') + down.diff + ' pts).');
+    spacer(6);
     bodyText(overallShift >= 10
       ? "That's a fairly large adaptation. It's often effective \u2014 you're consciously adjusting to what the role needs \u2014 but a sustained, large gap over long periods can lead to fatigue or burnout. Worth building in recovery time outside of work."
       : "That's a relatively modest adaptation. Your workplace behavior is close to your natural baseline, which is usually easier to sustain day to day.");
-    spacer(6);
+    spacer(16);
     divider();
 
     checkPageBreak(70);
     sectionLabel('Sales Role Application');
     heading('How this plays out in a sales role', 14);
-    spacer(4);
+    spacer(8);
     REPORT[adaTop].sales.forEach(bullet);
     if (ada.gapClose) {
-      spacer(2);
+      spacer(6);
       bodyText('Where your ' + TRAIT_META[adaSecond].name + ' side adds to this:', { bold: true, size: 10.5 });
+      spacer(2);
       REPORT[adaSecond].sales.slice(0, 2).forEach(bullet);
     }
     if (natTop !== adaTop) {
-      spacer(4);
+      spacer(8);
       bodyText('Note: your natural baseline leans ' + TRAIT_META[natTop].name + ', but your adaptive/work style leans ' + TRAIT_META[adaTop].name + '. That means you\'re consciously flexing into a different mode for the job \u2014 effective, but worth monitoring for energy drain over a long day of client-facing work.', { size: 10, color: '#6b6a75' });
     }
 
-    spacer(14);
+    spacer(20);
     checkPageBreak(40);
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(9);
