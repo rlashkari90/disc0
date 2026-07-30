@@ -1,0 +1,1073 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+
+<style>
+  :root {
+    --ink: #1c1d2b;
+    --paper: #f6f4ef;
+    --card: #ffffff;
+    --line: #e4e1d8;
+    --d: #d9483d;
+    --i: #e8a324;
+    --s: #3f8f6a;
+    --c: #33628f;
+    --muted: #6b6a75;
+  }
+
+  * { box-sizing: border-box; }
+
+  #disc-root {
+    font-family: 'Inter', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100%;
+    padding: 40px 20px 60px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .disc-wrap { width: 100%; max-width: 660px; }
+
+  .disc-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  h1.disc-title {
+    font-family: 'Fraunces', serif;
+    font-size: 34px;
+    font-weight: 600;
+    line-height: 1.1;
+    margin: 0 0 6px;
+  }
+
+  .disc-sub {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 28px;
+  }
+
+  .disc-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 32px;
+  }
+
+  .disc-progress-track {
+    height: 5px;
+    background: var(--line);
+    border-radius: 4px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .disc-progress-fill {
+    height: 100%;
+    background: var(--ink);
+    border-radius: 4px;
+    transition: width .3s ease;
+  }
+  .disc-progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .disc-instruction {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 20px;
+  }
+
+  .disc-col-headers {
+    display: grid;
+    grid-template-columns: 1fr 64px 64px;
+    gap: 8px;
+    padding: 0 4px 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+  }
+  .disc-col-headers span:nth-child(2), .disc-col-headers span:nth-child(3) {
+    text-align: center;
+  }
+
+  .disc-phrase-row {
+    display: grid;
+    grid-template-columns: 1fr 64px 64px;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 4px;
+    border-top: 1px solid var(--line);
+  }
+  .disc-phrase-row:last-child { border-bottom: 1px solid var(--line); }
+  .disc-phrase-text { font-size: 14.5px; font-weight: 500; }
+
+  .disc-choice-btn {
+    width: 100%;
+    padding: 9px 0;
+    border-radius: 8px;
+    border: 1.5px solid var(--line);
+    background: transparent;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+    transition: all .15s;
+  }
+  .disc-choice-btn:hover { border-color: var(--ink); }
+  .disc-choice-btn.most-selected {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .disc-choice-btn.least-selected {
+    background: #ded9ce;
+    border-color: #b9b2a2;
+    color: var(--ink);
+  }
+  .disc-choice-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+  .disc-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 14px;
+  }
+
+  .disc-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 22px;
+  }
+
+  .disc-btn {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 11px 20px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .disc-btn:active { transform: scale(0.97); }
+  .disc-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .disc-btn-primary { background: var(--ink); color: var(--paper); }
+  .disc-btn-ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--line); }
+
+  /* results */
+  .disc-bars { display: flex; flex-direction: column; gap: 16px; margin: 22px 0 10px; }
+  .disc-bar-row { display: flex; align-items: center; gap: 12px; }
+  .disc-bar-label { width: 108px; font-size: 13px; font-weight: 600; flex: none; }
+  .disc-bar-track { flex: 1; background: var(--line); border-radius: 6px; height: 20px; overflow: hidden; }
+  .disc-bar-fill { height: 100%; border-radius: 6px; width: 0%; transition: width 1s cubic-bezier(.2,.8,.2,1); }
+  .disc-bar-pct { width: 42px; text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--muted); flex: none; }
+
+  .disc-profile-tag {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    margin-bottom: 14px;
+  }
+
+  .disc-result-desc { font-size: 15px; line-height: 1.6; margin-bottom: 18px; }
+  .disc-result-desc strong { font-weight: 600; }
+
+  .disc-restart { margin-top: 26px; text-align: center; }
+
+  .disc-panel-tabs {
+    display: flex;
+    gap: 6px;
+    margin: 22px 0 14px;
+    border-bottom: 1.5px solid var(--line);
+  }
+  .disc-panel-tab {
+    padding: 8px 4px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+  }
+  .disc-panel-tab.active { color: var(--ink); border-bottom-color: var(--ink); }
+
+  .disc-gap-box {
+    background: #f0efe9;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-top: 18px;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+  .disc-gap-box b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 8px; }
+  .disc-gap-row { margin-bottom: 4px; }
+
+  @media (max-width: 480px) {
+    .disc-card { padding: 20px; }
+    h1.disc-title { font-size: 27px; }
+    .disc-instruction { font-size: 16px; }
+    .disc-phrase-text { font-size: 13px; }
+    .disc-col-headers, .disc-phrase-row { grid-template-columns: 1fr 50px 50px; }
+  }
+</style>
+
+<div id="disc-root">
+  <div class="disc-wrap">
+    <div class="disc-eyebrow">Behavioral style assessment</div>
+    <h1 class="disc-title">DISC Questionnaire</h1>
+    <div class="disc-sub">24 short rounds. In each one, pick the word that's <strong>most</strong> like you and the word that's <strong>least</strong> like you, thinking about how you show up at work.</div>
+    <div class="disc-card" id="disc-card"></div>
+  </div>
+</div>
+
+<style>
+  .disc-name-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    margin-bottom: 18px;
+  }
+  .disc-name-input:focus { outline: none; border-color: var(--ink); }
+  .disc-name-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; display: block; }
+</style>
+
+<script>
+(function() {
+  const root = document.getElementById('disc-card');
+
+  // EmailJS config — free tier, no attachments needed since we email a results link instead.
+  const EMAILJS_SERVICE_ID = 'service_3zxbgee';
+  const EMAILJS_TEMPLATE_ID = 'template_ypbgert';
+  const EMAILJS_PUBLIC_KEY = 'HUg3RMqol5JbaO0UO';
+  const AGENT_EMAIL = 'Reza@LLHomesTeam.com';
+  if (window.emailjs) {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  }
+
+  // Original word banks (24 per trait) used to build 24 forced-choice rounds.
+  // Each round has exactly one word from each trait, shuffled into a random position.
+  const BANK = {
+    D: ["Decisive","Direct","Competitive","Bold","Assertive","Driven","Blunt","Fearless",
+        "Results-focused","Demanding","Independent-minded","Strong-willed","Adventurous","Forceful",
+        "Confident","Impatient","Take-charge","Risk-taking","Commanding","Ambitious","Firm","Daring",
+        "Determined","Authoritative"],
+    I: ["Enthusiastic","Talkative","Optimistic","Charming","Sociable","Persuasive","Spontaneous",
+        "Expressive","Energetic","Friendly","Playful","Inspiring","Outgoing","Warm","Animated",
+        "Trusting","Charismatic","Impulsive","Chatty","Motivating","Cheerful","Magnetic","Excitable","Popular"],
+    S: ["Patient","Loyal","Calm","Dependable","Supportive","Steady","Easygoing","Consistent",
+        "Accommodating","Team-oriented","Reserved","Gentle","Cooperative","Reliable","Modest",
+        "Sympathetic","Predictable","Agreeable","Peaceful","Change-averse","Humble","Considerate",
+        "Tolerant","Unhurried"],
+    C: ["Analytical","Precise","Systematic","Cautious","Detail-oriented","Logical","Orderly",
+        "Thorough","Careful","Methodical","Objective","Disciplined","Reflective","Skeptical",
+        "Perfectionistic","Accurate","Rule-following","Diplomatic","Deliberate","Fact-focused",
+        "Formal","Conscientious","Exacting","Prudent"],
+  };
+
+  function seededShuffle(arr, seed) {
+    const a = arr.slice();
+    let s = seed;
+    for (let i = a.length - 1; i > 0; i--) {
+      s = (s * 9301 + 49297) % 233280;
+      const j = Math.floor((s / 233280) * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const ROUNDS = [];
+  for (let i = 0; i < 24; i++) {
+    const items = [
+      { t: 'D', text: BANK.D[i] },
+      { t: 'I', text: BANK.I[i] },
+      { t: 'S', text: BANK.S[i] },
+      { t: 'C', text: BANK.C[i] },
+    ];
+    ROUNDS.push(seededShuffle(items, (i + 1) * 137));
+  }
+
+  const TRAIT_META = {
+    D: { name: 'Dominance', hex: '#d9483d',
+      blurb: "Direct, decisive, and results-driven. You move fast, push for outcomes, and aren't afraid of confrontation if it gets things done." },
+    I: { name: 'Influence', hex: '#e8a324',
+      blurb: "Outgoing, persuasive, and optimistic. You energize a room, build relationships quickly, and lead through enthusiasm." },
+    S: { name: 'Steadiness', hex: '#3f8f6a',
+      blurb: "Patient, loyal, and calm under pressure. You value harmony, dependability, and steady, considerate follow-through." },
+    C: { name: 'Conscientiousness', hex: '#33628f',
+      blurb: "Precise, analytical, and quality-focused. You slow down for the details, trust data over hunches, and hold a high bar." },
+  };
+
+  const REPORT = {
+    D: {
+      insights: [
+        "You're drawn to new, unprecedented problems more than routine ones.",
+        "You can grow impatient when progress feels slow.",
+        "You make decisions quickly, even with incomplete information.",
+        "You'd rather be given a big-picture goal than a step-by-step script.",
+        "You take ownership of outcomes and expect the same from others.",
+      ],
+      effective: [
+        "Being given autonomy over how a goal gets reached, not just the goal itself.",
+        "Fast decision cycles rather than long approval chains.",
+        "Big, meaty challenges rather than repetitive tasks.",
+        "Direct, no-filler communication from the people around you.",
+      ],
+      doThis: ["Get to the point quickly.", "Focus on results and options, not process.", "Let them own the decision.", "Match their pace."],
+      dontThis: ["Ramble or over-explain.", "Repeat details they've already grasped.", "Be indecisive.", "Try to control every step."],
+      strengths: [
+        "Decisive — comfortable making the call without waiting for full consensus.",
+        "Results-oriented — stays focused on the outcome, not just the activity.",
+        "Confident under pressure — handles objections and rejection without losing momentum.",
+        "Creates urgency — good at moving a deal or decision forward when things stall.",
+      ],
+      weaknesses: [
+        "Can come across as blunt or impatient, especially with detail-oriented or cautious people.",
+        "May push for a close before the other side feels ready, creating friction.",
+        "Tends to skip steps in the process in favor of speed.",
+        "Can be a weaker listener in the moment, especially when convinced they're right.",
+      ],
+      sales: [
+        "Strong at prospecting and cold outreach — comfortable initiating and handling early pushback.",
+        "Excels at negotiating and closing, particularly in competitive, quota-driven environments.",
+        "Best used on deals that need momentum: motivated sellers, time-sensitive offers, multiple-offer situations.",
+        "Should build in deliberate follow-up systems and slow down during discovery, so prospects feel heard rather than steered.",
+      ],
+    },
+    I: {
+      insights: [
+        "You engage easily with people you've just met, not just close contacts.",
+        "You're motivated by recognition and the chance to influence others.",
+        "You prefer a collaborative dynamic over a strictly top-down one.",
+        "You bring energy to a room and tend to keep morale up.",
+        "You can lose steam on tasks that don't involve people.",
+      ],
+      effective: [
+        "Regular contact with people rather than long solo stretches.",
+        "Public recognition for wins, not just private feedback.",
+        "Variety in the day-to-day rather than a fixed routine.",
+        "Room to think out loud rather than needing everything in writing first.",
+      ],
+      doThis: ["Bring warmth and energy.", "Give them room to talk it through.", "Recognize their ideas publicly.", "Keep things upbeat."],
+      dontThis: ["Be all-business and cold.", "Bury them in details up front.", "Isolate them from the group.", "Shut down their enthusiasm."],
+      strengths: [
+        "Builds rapport quickly and puts people at ease in first meetings.",
+        "Naturally persuasive and enthusiastic — energy is contagious in presentations and open houses.",
+        "Strong network-builder; referrals and repeat introductions come easily.",
+        "Optimistic under setbacks, which helps sustain momentum through a long pipeline.",
+      ],
+      weaknesses: [
+        "Can overpromise in the moment to keep the mood positive.",
+        "Follow-through on paperwork, detail, and deadlines is often the weak link.",
+        "May avoid delivering hard truths (a bad comp, a lowball offer) to protect the relationship.",
+        "Can talk more than listen, missing what a client is actually signaling.",
+      ],
+      sales: [
+        "Excels at lead generation through relationships — sphere of influence, open houses, referrals, social content.",
+        "Strongest at the first meeting and the pitch; needs support (CRM, checklists, an assistant, or a system) to protect follow-up and paperwork.",
+        "Should pair enthusiasm with a written next-step and a deadline, so warm conversations convert into signed agreements.",
+        "Benefits from scheduled check-ins rather than relying on memory to stay in touch with a full pipeline.",
+      ],
+    },
+    S: {
+      insights: [
+        "You prefer a steady, predictable pace over constant change.",
+        "You listen well and give people space to be heard.",
+        "You build loyalty and trust slowly, but it runs deep once established.",
+        "You're uncomfortable being rushed into a decision.",
+        "You do best with clear expectations and enough time to adjust.",
+      ],
+      effective: [
+        "Advance notice before a process or plan changes.",
+        "Clear, specific expectations rather than open-ended asks.",
+        "Time to build trust with new people before being asked to open up.",
+        "A steady pace rather than constant fire drills.",
+      ],
+      doThis: ["Be patient and steady.", "Explain the \"why\" behind a change.", "Give advance notice.", "Reassure them it's safe to speak up."],
+      dontThis: ["Rush them into a snap decision.", "Spring sudden changes on them.", "Be confrontational.", "Pressure them to argue their case on the spot."],
+      strengths: [
+        "Builds deep trust over time — clients feel genuinely listened to and cared for.",
+        "Calm and steady through stressful negotiations or a long escrow.",
+        "Highly dependable — follow-through and reliability are a real differentiator.",
+        "Strong at nurturing long-term and repeat/referral relationships.",
+      ],
+      weaknesses: [
+        "Can be slow to prospect or make the first cold outreach.",
+        "May avoid pushing for the close or the tougher ask, out of a wish to avoid conflict.",
+        "Can under-negotiate on price or terms to keep the relationship comfortable.",
+        "Change and sudden shifts in a deal can be more unsettling than for other styles.",
+      ],
+      sales: [
+        "Excels at client care during long, detail-heavy transactions, and at repeat/referral business built on trust.",
+        "Best suited to a warm, relationship-first pipeline rather than high-volume cold prospecting.",
+        "Should practice direct asks — for the appointment, the signature, the referral — since clients will rarely feel pressured by this style.",
+        "Benefits from an accountability partner or scripted prompts to initiate outreach on a consistent schedule.",
+      ],
+    },
+    C: {
+      insights: [
+        "You want to see the data before committing to a direction.",
+        "You hold a high bar for accuracy in your own work and others'.",
+        "You prefer clear standards over ambiguous expectations.",
+        "You're comfortable working independently once you have the facts.",
+        "You can get frustrated by decisions made without enough information.",
+      ],
+      effective: [
+        "Enough time and information to reach a well-supported conclusion.",
+        "Clear standards or criteria for what \"done well\" looks like.",
+        "Minimal last-minute surprises or scope changes.",
+        "Quiet, focused blocks of time rather than constant interruptions.",
+      ],
+      doThis: ["Bring data and documentation.", "Be precise and organized.", "Give them time to analyze before deciding.", "Respect their process."],
+      dontThis: ["Be vague or hand-wavy.", "Push for an instant decision.", "Skip the supporting details.", "Be overly emotional or high-pressure."],
+      strengths: [
+        "Thorough preparation — comps, contracts, and numbers are checked and defensible.",
+        "Builds credibility through expertise and precision rather than charm.",
+        "Catches errors and risks others miss, protecting clients and the transaction.",
+        "Makes well-reasoned, data-backed recommendations clients can trust.",
+      ],
+      weaknesses: [
+        "Can overanalyze and slow down decisions that need to move quickly.",
+        "May come across as reserved, critical, or less warm in first meetings.",
+        "Risk-aversion can mean missed opportunities that require a fast, gut-level call.",
+        "Small talk and rapport-building can feel like a lower priority than getting the facts right.",
+      ],
+      sales: [
+        "Excels at CMAs, pricing strategy, and contract accuracy — the analytical backbone of a transaction.",
+        "Builds strong trust with data-driven or skeptical clients who want to see the numbers, not just hear a pitch.",
+        "Should deliberately schedule time for rapport and follow-up calls that aren't about data, since the relationship is the entry point.",
+        "Benefits from setting a decision deadline for pricing/negotiation calls, to counter the pull toward more analysis.",
+      ],
+    },
+  };
+
+  let current = 0;
+  let reportName = '';
+  let reportEmail = '';
+  // Each entry: { most: 'D'|'I'|'S'|'C'|null, least: ... }
+  const answers = Array.from({ length: ROUNDS.length }, () => ({ most: null, least: null }));
+
+  function isValidEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  }
+
+  function renderIntro() {
+    root.innerHTML = `
+      <div class="disc-instruction" style="margin-bottom:10px;">Before you start</div>
+      <label class="disc-name-label">Your name (optional — used on the PDF report)</label>
+      <input type="text" class="disc-name-input" id="disc-name" placeholder="e.g. Jordan Lee" value="${reportName}">
+      <label class="disc-name-label">Your email (we'll send your results here)</label>
+      <input type="email" class="disc-name-input" id="disc-email" placeholder="e.g. jordan@email.com" value="${reportEmail}">
+      <div class="disc-nav" style="justify-content:flex-end;">
+        <button class="disc-btn disc-btn-primary" id="disc-start">Start assessment</button>
+      </div>
+    `;
+    document.getElementById('disc-start').addEventListener('click', () => {
+      const emailVal = document.getElementById('disc-email').value.trim();
+      if (!isValidEmail(emailVal)) {
+        document.getElementById('disc-email').style.borderColor = '#d9483d';
+        return;
+      }
+      reportName = document.getElementById('disc-name').value.trim();
+      reportEmail = emailVal;
+      renderQuestion();
+    });
+  }
+
+  function renderQuestion() {
+    const round = ROUNDS[current];
+    const a = answers[current];
+    const pct = Math.round((current) / ROUNDS.length * 100);
+
+    root.innerHTML = `
+      <div class="disc-progress-label">Round ${current + 1} of ${ROUNDS.length}</div>
+      <div class="disc-progress-track"><div class="disc-progress-fill" style="width:${pct}%"></div></div>
+      <div class="disc-instruction">Which word is most like you, and which is least like you?</div>
+
+      <div class="disc-col-headers"><span></span><span>Most</span><span>Least</span></div>
+      ${round.map((item, idx) => `
+        <div class="disc-phrase-row">
+          <div class="disc-phrase-text">${item.text}</div>
+          <button class="disc-choice-btn ${a.most === idx ? 'most-selected' : ''}" data-kind="most" data-idx="${idx}" ${a.least === idx ? 'disabled' : ''}>Most</button>
+          <button class="disc-choice-btn ${a.least === idx ? 'least-selected' : ''}" data-kind="least" data-idx="${idx}" ${a.most === idx ? 'disabled' : ''}>Least</button>
+        </div>
+      `).join('')}
+
+      <div class="disc-hint">Pick one "Most" and one "Least" from the four words above.</div>
+
+      <div class="disc-nav">
+        <button class="disc-btn disc-btn-ghost" id="disc-back" ${current === 0 ? 'disabled' : ''}>Back</button>
+        <button class="disc-btn disc-btn-primary" id="disc-next" ${(a.most === null || a.least === null) ? 'disabled' : ''}>
+          ${current === ROUNDS.length - 1 ? 'See results' : 'Next'}
+        </button>
+      </div>
+    `;
+
+    root.querySelectorAll('.disc-choice-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const kind = btn.getAttribute('data-kind');
+        const idx = parseInt(btn.getAttribute('data-idx'), 10);
+        answers[current][kind] = idx;
+        renderQuestion();
+      });
+    });
+    document.getElementById('disc-back').addEventListener('click', () => {
+      if (current > 0) { current--; renderQuestion(); }
+    });
+    document.getElementById('disc-next').addEventListener('click', () => {
+      if (a.most === null || a.least === null) return;
+      if (current < ROUNDS.length - 1) { current++; renderQuestion(); }
+      else { finishQuizAndShowResults(); }
+    });
+  }
+
+  function rankOf(pcts) {
+    const ranked = Object.keys(pcts).sort((a, b) => pcts[b] - pcts[a]);
+    const gapClose = (pcts[ranked[0]] - pcts[ranked[1]]) <= 6;
+    return { pcts, ranked, gapClose };
+  }
+
+  function computeScores() {
+    const mostCount = { D: 0, I: 0, S: 0, C: 0 };
+    const leastCount = { D: 0, I: 0, S: 0, C: 0 };
+    ROUNDS.forEach((round, i) => {
+      const a = answers[i];
+      mostCount[round[a.most].t]++;
+      leastCount[round[a.least].t]++;
+    });
+
+    const total = ROUNDS.length; // 24
+    const adaptivePcts = {};
+    Object.keys(mostCount).forEach(k => adaptivePcts[k] = Math.round(mostCount[k] / total * 100));
+
+    // Natural/core style = net of most-minus-least, rescaled to a 0-100 range.
+    const naturalPcts = {};
+    Object.keys(mostCount).forEach(k => {
+      const net = mostCount[k] - leastCount[k]; // ranges roughly -24..24
+      naturalPcts[k] = Math.round(((net + total) / (total * 2)) * 100);
+    });
+
+    return { adaptive: rankOf(adaptivePcts), natural: rankOf(naturalPcts), mostCount, leastCount };
+  }
+
+  // Encode/decode a compact results payload into a URL so a results link can
+  // reopen straight to someone's results without re-taking the assessment.
+  function encodeResultsPayload(natPcts, adaPcts, name) {
+    const payload = JSON.stringify({ n: natPcts, a: adaPcts, nm: name || '' });
+    return btoa(unescape(encodeURIComponent(payload)));
+  }
+  function decodeResultsPayload(str) {
+    try {
+      const json = decodeURIComponent(escape(atob(str)));
+      const obj = JSON.parse(json);
+      if (!obj || !obj.n || !obj.a) return null;
+      return obj;
+    } catch (e) {
+      return null;
+    }
+  }
+  function buildResultsLink(natPcts, adaPcts, name) {
+    const encoded = encodeResultsPayload(natPcts, adaPcts, name);
+    const base = window.location.origin + window.location.pathname;
+    return base + '?r=' + encodeURIComponent(encoded);
+  }
+
+  function summaryLine(sc) {
+    return ['D', 'I', 'S', 'C'].map(k => k + ' ' + sc.pcts[k] + '%').join(' / ') +
+      ' — ' + TRAIT_META[sc.ranked[0]].name + '-leaning';
+  }
+
+  function sendResultEmails(nat, ada, link) {
+    if (!window.emailjs) return;
+    const natSummary = summaryLine(nat);
+    const adaSummary = summaryLine(ada);
+
+    // Copy to the person who took it
+    if (reportEmail) {
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: reportEmail,
+        to_name: reportName || 'there',
+        natural_summary: natSummary,
+        adaptive_summary: adaSummary,
+        results_link: link,
+      }).catch(err => console.error('EmailJS (respondent) error:', err));
+    }
+
+    // Copy to the agent
+    const takerLabel = reportName ? reportName : (reportEmail || 'Someone');
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: AGENT_EMAIL,
+      to_name: 'Reza',
+      natural_summary: takerLabel + ' — Natural: ' + natSummary,
+      adaptive_summary: takerLabel + ' — Adaptive: ' + adaSummary,
+      results_link: link,
+    }).catch(err => console.error('EmailJS (agent) error:', err));
+  }
+
+
+  function barsHtml(pcts) {
+    return `
+      <div class="disc-bars">
+        ${['D','I','S','C'].map(k => `
+          <div class="disc-bar-row">
+            <div class="disc-bar-label">${TRAIT_META[k].name}</div>
+            <div class="disc-bar-track"><div class="disc-bar-fill" data-w="${pcts[k]}" style="background:${TRAIT_META[k].hex}"></div></div>
+            <div class="disc-bar-pct">${pcts[k]}%</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function finishQuizAndShowResults() {
+    const scores = computeScores();
+    const nat = scores.natural, ada = scores.adaptive;
+    const link = buildResultsLink(nat.pcts, ada.pcts, reportName);
+    sendResultEmails(nat, ada, link);
+    displayResults(nat, ada, { link, justFinished: true });
+  }
+
+  function displayResults(nat, ada, opts) {
+    opts = opts || {};
+
+    const gaps = ['D','I','S','C'].map(k => ({ k, diff: ada.pcts[k] - nat.pcts[k] }));
+    const biggestUp = gaps.slice().sort((a, b) => b.diff - a.diff)[0];
+    const biggestDown = gaps.slice().sort((a, b) => a.diff - b.diff)[0];
+    const overallShift = gaps.reduce((s, g) => s + Math.abs(g.diff), 0) / 4;
+
+    function primaryBlock(sc) {
+      const top = sc.ranked[0], second = sc.ranked[1];
+      return `
+        <div class="disc-profile-tag" style="background:${TRAIT_META[top].hex}">
+          ${sc.gapClose ? TRAIT_META[top].name + ' / ' + TRAIT_META[second].name : TRAIT_META[top].name}
+        </div>
+        <div class="disc-result-desc">
+          <strong>${TRAIT_META[top].name}.</strong> ${TRAIT_META[top].blurb}
+          ${sc.gapClose ? ` You also scored close behind in <strong>${TRAIT_META[second].name}</strong> — ${TRAIT_META[second].blurb.toLowerCase()}` : ''}
+        </div>
+        ${barsHtml(sc.pcts)}
+      `;
+    }
+
+    root.innerHTML = `
+      <div class="disc-eyebrow" style="margin-bottom:2px;">Your results</div>
+      ${opts.justFinished ? `<div class="disc-gap-box" style="margin-top:0; margin-bottom:14px;">A copy of your results has been emailed to you${reportEmail ? ' at ' + reportEmail : ''}.</div>` : ''}
+
+      <div class="disc-panel-tabs">
+        <div class="disc-panel-tab active" data-panel="nat">Natural</div>
+        <div class="disc-panel-tab" data-panel="ada">Adaptive (at work)</div>
+      </div>
+
+      <div id="disc-panel-nat">${primaryBlock(nat)}</div>
+      <div id="disc-panel-ada" style="display:none;">${primaryBlock(ada)}</div>
+
+      <div class="disc-gap-box">
+        <b>Natural vs. adaptive gap</b>
+        <div class="disc-gap-row">On average, your scores shift about <strong>${Math.round(overallShift)} points</strong> between your baseline tendency and how you present yourself at work.</div>
+        <div class="disc-gap-row">You dial <strong>up</strong> ${TRAIT_META[biggestUp.k].name} the most at work (${biggestUp.diff >= 0 ? '+' : ''}${biggestUp.diff} pts).</div>
+        <div class="disc-gap-row">You dial <strong>down</strong> ${TRAIT_META[biggestDown.k].name} the most at work (${biggestDown.diff >= 0 ? '+' : ''}${biggestDown.diff} pts).</div>
+        <div class="disc-gap-row" style="margin-top:6px; color:var(--muted);">${overallShift >= 10
+          ? "That's a fairly large adaptation — effective, but worth watching for fatigue if it's sustained all day, every day."
+          : "That's a relatively small adaptation — your workplace behavior is close to your baseline, which is usually easier to sustain."}</div>
+      </div>
+
+      <div class="disc-restart" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button class="disc-btn disc-btn-primary" id="disc-download">Download PDF report</button>
+        <button class="disc-btn disc-btn-ghost" id="disc-restart">Retake assessment</button>
+      </div>
+    `;
+
+    function animateBars() {
+      root.querySelectorAll('.disc-bar-fill').forEach(el => {
+        el.style.width = el.getAttribute('data-w') + '%';
+      });
+    }
+    requestAnimationFrame(animateBars);
+
+    root.querySelectorAll('.disc-panel-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        root.querySelectorAll('.disc-panel-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const which = tab.getAttribute('data-panel');
+        document.getElementById('disc-panel-nat').style.display = which === 'nat' ? '' : 'none';
+        document.getElementById('disc-panel-ada').style.display = which === 'ada' ? '' : 'none';
+        requestAnimationFrame(animateBars);
+      });
+    });
+
+    document.getElementById('disc-restart').addEventListener('click', () => {
+      current = 0;
+      answers.forEach(a => { a.most = null; a.least = null; });
+      window.history.replaceState({}, '', window.location.pathname);
+      renderIntro();
+    });
+
+    document.getElementById('disc-download').addEventListener('click', () => {
+      buildPdfReport(nat, ada, gaps, overallShift);
+    });
+  }
+
+  function buildPdfReport(nat, ada, gaps, overallShift) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 56;
+    const usableW = pageW - margin * 2;
+    let y = 64;
+
+    function heading(text, size) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(size);
+      doc.setTextColor('#1c1d2b');
+      doc.text(text, margin, y);
+      y += size * 0.9;
+    }
+    function bodyText(text, opts) {
+      opts = opts || {};
+      doc.setFont('helvetica', opts.bold ? 'bold' : 'normal');
+      doc.setFontSize(opts.size || 11);
+      doc.setTextColor(opts.color || '#33323d');
+      const lines = doc.splitTextToSize(text, usableW - (opts.indent || 0));
+      lines.forEach(line => {
+        checkPageBreak(16);
+        doc.text(line, margin + (opts.indent || 0), y);
+        y += (opts.size || 11) * 1.35;
+      });
+    }
+    function bullet(text) {
+      checkPageBreak(16);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10.5);
+      doc.setTextColor('#33323d');
+      const lines = doc.splitTextToSize(text, usableW - 16);
+      doc.text('\u2022', margin, y);
+      lines.forEach((line, i) => {
+        if (i > 0) checkPageBreak(15);
+        doc.text(line, margin + 14, y);
+        y += 15;
+      });
+      y += 4;
+    }
+    function spacer(h) { y += h; }
+    function checkPageBreak(needed) {
+      if (y + needed > 740) { doc.addPage(); y = 56; }
+    }
+    function divider() {
+      doc.setDrawColor('#e4e1d8');
+      doc.line(margin, y, pageW - margin, y);
+      y += 18;
+    }
+    function sectionLabel(text) {
+      checkPageBreak(26);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor('#8a8896');
+      doc.text(text.toUpperCase(), margin, y);
+      y += 14;
+    }
+    function comboBars(nPcts, aPcts) {
+      // Axis scale reference (0/50/100) drawn once above the bars
+      const barX0 = margin + 90;
+      const barW0 = usableW - 90 - 46;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor('#9a988f');
+      [0, 50, 100].forEach(v => {
+        const gx = barX0 + barW0 * (v / 100);
+        doc.text(String(v), gx - 4, y - 4);
+      });
+      y += 4;
+
+      ['D','I','S','C'].forEach(k => {
+        checkPageBreak(42);
+        const barX = margin + 90;
+        const barW = usableW - 90 - 46;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor('#1c1d2b');
+        doc.text(TRAIT_META[k].name, margin, y + 8);
+
+        doc.setFillColor('#e4e1d8');
+        doc.rect(barX, y, barW, 8, 'F');
+        doc.setFillColor(TRAIT_META[k].hex);
+        doc.rect(barX, y, barW * (nPcts[k] / 100), 8, 'F');
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor('#6b6a75');
+        doc.text('Natural ' + nPcts[k] + '%', barX + barW + 8, y + 7);
+
+        doc.setFillColor('#e4e1d8');
+        doc.rect(barX, y + 12, barW, 8, 'F');
+        doc.setFillColor('#9a988f');
+        doc.rect(barX, y + 12, barW * (aPcts[k] / 100), 8, 'F');
+        doc.text('Adaptive ' + aPcts[k] + '%', barX + barW + 8, y + 19);
+
+        y += 34;
+      });
+
+      // legend
+      checkPageBreak(16);
+      doc.setFillColor('#8a8896');
+      doc.rect(margin + 90, y, 8, 8, 'F');
+      doc.setFontSize(8.5);
+      doc.setTextColor('#6b6a75');
+      doc.text('Colored bar = Natural     Gray bar = Adaptive', margin + 102, y + 7);
+      y += 18;
+    }
+
+    // Vertical bar chart (Natural vs Adaptive) for a single trait, used in the
+    // Four Components of Behavior section.
+    function traitChart(k, natPct, adaPct) {
+      checkPageBreak(108);
+      const chartH = 78;
+      const chartTop = y;
+      const axisX = margin + 26;
+      const chartW = 120;
+      const baseline = chartTop + chartH;
+
+      doc.setDrawColor('#e4e1d8');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor('#9a988f');
+      [0, 25, 50, 75, 100].forEach(v => {
+        const gy = baseline - (v / 100) * chartH;
+        doc.line(axisX, gy, axisX + chartW, gy);
+        doc.text(String(v), axisX - 14, gy + 2);
+      });
+
+      const barW = 22;
+      const gap = 16;
+      const natX = axisX + chartW / 2 - barW - gap / 2;
+      const adaX = axisX + chartW / 2 + gap / 2;
+      const natH = (natPct / 100) * chartH;
+      const adaH = (adaPct / 100) * chartH;
+
+      doc.setFillColor(TRAIT_META[k].hex);
+      doc.rect(natX, baseline - natH, barW, natH, 'F');
+      doc.setFillColor('#9a988f');
+      doc.rect(adaX, baseline - adaH, barW, adaH, 'F');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor('#1c1d2b');
+      doc.text(String(natPct), natX + barW / 2, baseline - natH - 4, { align: 'center' });
+      doc.text(String(adaPct), adaX + barW / 2, baseline - adaH - 4, { align: 'center' });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor('#6b6a75');
+      doc.text('Natural', natX + barW / 2, baseline + 12, { align: 'center' });
+      doc.text('Adaptive', adaX + barW / 2, baseline + 12, { align: 'center' });
+
+      return { chartTop, chartBottom: baseline + 20, chartRight: axisX + chartW };
+    }
+
+    // Two-column bullet layout, used for Strengths vs. Watch-outs.
+    function twoColBullets(leftTitle, leftColor, leftItems, rightTitle, rightColor, rightItems) {
+      checkPageBreak(30 + Math.max(leftItems.length, rightItems.length) * 26);
+      const gutter = 20;
+      const colW = (usableW - gutter) / 2;
+      const leftX = margin;
+      const rightX = margin + colW + gutter;
+      const yTop = y;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.setTextColor(leftColor);
+      doc.text(leftTitle, leftX, yTop);
+      doc.setTextColor(rightColor);
+      doc.text(rightTitle, rightX, yTop);
+
+      function colBullets(items, colX, colWidth, startY) {
+        let cy = startY;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9.5);
+        doc.setTextColor('#33323d');
+        items.forEach(text => {
+          const lines = doc.splitTextToSize(text, colWidth - 14);
+          doc.text('\u2022', colX, cy);
+          lines.forEach((line, i) => {
+            doc.text(line, colX + 10, cy);
+            cy += 12.5;
+          });
+          cy += 3;
+        });
+        return cy;
+      }
+
+      const yLeftEnd = colBullets(leftItems, leftX, colW, yTop + 16);
+      const yRightEnd = colBullets(rightItems, rightX, colW, yTop + 16);
+      y = Math.max(yLeftEnd, yRightEnd) + 6;
+    }
+
+
+    doc.setFillColor('#1c1d2b');
+    doc.rect(0, 0, pageW, 48, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor('#f6f4ef');
+    doc.text('DISC Behavioral Style Report', margin, 31);
+    y = 84;
+
+    const natTop = nat.ranked[0], natSecond = nat.ranked[1];
+    const adaTop = ada.ranked[0], adaSecond = ada.ranked[1];
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    if (reportName) {
+      bodyText('Prepared for ' + reportName + ' \u2014 ' + dateStr, { size: 10, color: '#6b6a75' });
+    } else {
+      bodyText('Prepared ' + dateStr, { size: 10, color: '#6b6a75' });
+    }
+    spacer(10);
+
+    sectionLabel('Executive Summary');
+    heading('Natural and Adaptive Styles Comparison', 15);
+    spacer(6);
+    bodyText('Your Natural style is your baseline tendency \u2014 how you operate before adjusting to a role or situation. Your Adaptive style is what you lead with day to day, adjusted for what the job demands. A large gap between the two is often effective, but can be tiring to sustain over time.', { size: 10 });
+    spacer(8);
+    comboBars(nat.pcts, ada.pcts);
+    spacer(10);
+    bodyText('Your natural style leans ' + TRAIT_META[natTop].name + (nat.gapClose ? '/' + TRAIT_META[natSecond].name : '') +
+      '. Your adaptive, at-work style leans ' + TRAIT_META[adaTop].name + (ada.gapClose ? '/' + TRAIT_META[adaSecond].name : '') + '.', { bold: true, size: 11 });
+    spacer(4);
+    divider();
+
+    checkPageBreak(60);
+    sectionLabel('Four Components of Behavior');
+    heading('A closer look at your adaptive (work) style', 15);
+    spacer(6);
+    ['D','I','S','C'].forEach(k => {
+      checkPageBreak(150);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12.5);
+      doc.setTextColor(TRAIT_META[k].hex);
+      doc.text(TRAIT_META[k].name, margin, y);
+      y += 14;
+
+      const textX = margin + 150;
+      const textW = usableW - 150;
+      const chartStartY = y;
+      const chartInfo = traitChart(k, nat.pcts[k], ada.pcts[k]);
+      const chartBottom = chartInfo.chartBottom;
+
+      let ty = chartStartY;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor('#33323d');
+      const blurbLines = doc.splitTextToSize(TRAIT_META[k].blurb, textW);
+      blurbLines.forEach(line => { doc.text(line, textX, ty); ty += 13.5; });
+      ty += 4;
+      doc.setFontSize(9.5);
+      REPORT[k].insights.slice(0, 3).forEach(text => {
+        const lines = doc.splitTextToSize(text, textW - 14);
+        doc.text('\u2022', textX, ty);
+        lines.forEach(line => { doc.text(line, textX + 10, ty); ty += 12.5; });
+        ty += 2;
+      });
+
+      y = Math.max(chartBottom, ty) + 12;
+    });
+    divider();
+
+    checkPageBreak(80);
+    sectionLabel('Ideas for Being More Effective');
+    heading('What helps you do your best work', 14);
+    spacer(4);
+    bodyText('Based on your adaptive style, you tend to be more effective with:', { size: 10, color: '#6b6a75' });
+    spacer(2);
+    REPORT[adaTop].effective.forEach(bullet);
+    if (ada.gapClose) REPORT[adaSecond].effective.slice(0, 2).forEach(bullet);
+    spacer(6);
+    divider();
+
+    checkPageBreak(140);
+    sectionLabel('Strengths & Watch-outs');
+    heading('Your behavioral breakdown', 14);
+    spacer(10);
+    const strengthsList = REPORT[adaTop].strengths.concat(ada.gapClose ? REPORT[adaSecond].strengths.slice(0, 2) : []);
+    const weaknessesList = REPORT[adaTop].weaknesses.concat(ada.gapClose ? REPORT[adaSecond].weaknesses.slice(0, 2) : []);
+    twoColBullets('Strengths', '#3f8f6a', strengthsList, 'Watch-outs', '#d9483d', weaknessesList);
+    spacer(6);
+    divider();
+
+    checkPageBreak(100);
+    sectionLabel('Communication Insights for Others');
+    heading('How others can communicate with ' + (reportName || 'you') + ' effectively', 13);
+    spacer(6);
+    bodyText('Things to do:', { bold: true, size: 10.5 });
+    REPORT[adaTop].doThis.forEach(bullet);
+    spacer(4);
+    bodyText('Things to avoid:', { bold: true, size: 10.5 });
+    REPORT[adaTop].dontThis.forEach(bullet);
+    spacer(6);
+    divider();
+
+    checkPageBreak(60);
+    sectionLabel('Natural vs. Adaptive Gap');
+    const up = gaps.slice().sort((a,b) => b.diff - a.diff)[0];
+    const down = gaps.slice().sort((a,b) => a.diff - b.diff)[0];
+    bodyText('On average, your scores shift about ' + Math.round(overallShift) + ' points per trait between your natural baseline and your adaptive/work style. At work, you dial UP ' +
+      TRAIT_META[up.k].name + ' (' + (up.diff >= 0 ? '+' : '') + up.diff + ' pts) and dial DOWN ' + TRAIT_META[down.k].name + ' (' + (down.diff >= 0 ? '+' : '') + down.diff + ' pts).');
+    bodyText(overallShift >= 10
+      ? "That's a fairly large adaptation. It's often effective \u2014 you're consciously adjusting to what the role needs \u2014 but a sustained, large gap over long periods can lead to fatigue or burnout. Worth building in recovery time outside of work."
+      : "That's a relatively modest adaptation. Your workplace behavior is close to your natural baseline, which is usually easier to sustain day to day.");
+    spacer(6);
+    divider();
+
+    checkPageBreak(70);
+    sectionLabel('Sales Role Application');
+    heading('How this plays out in a sales role', 14);
+    spacer(4);
+    REPORT[adaTop].sales.forEach(bullet);
+    if (ada.gapClose) {
+      spacer(2);
+      bodyText('Where your ' + TRAIT_META[adaSecond].name + ' side adds to this:', { bold: true, size: 10.5 });
+      REPORT[adaSecond].sales.slice(0, 2).forEach(bullet);
+    }
+    if (natTop !== adaTop) {
+      spacer(4);
+      bodyText('Note: your natural baseline leans ' + TRAIT_META[natTop].name + ', but your adaptive/work style leans ' + TRAIT_META[adaTop].name + '. That means you\'re consciously flexing into a different mode for the job \u2014 effective, but worth monitoring for energy drain over a long day of client-facing work.', { size: 10, color: '#6b6a75' });
+    }
+
+    spacer(14);
+    checkPageBreak(40);
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(9);
+    doc.setTextColor('#6b6a75');
+    doc.text('This report is an original, self-administered assessment inspired by general DISC behavioral theory. It is intended to support self-awareness and coaching conversations, not as a clinical, hiring, or licensed psychometric instrument.', margin, y, { maxWidth: usableW });
+
+    doc.save('disc-style-report' + (reportName ? '-' + reportName.replace(/\s+/g, '-').toLowerCase() : '') + '.pdf');
+  }
+
+  // If this page was opened via a results link, jump straight to those results
+  // instead of starting a fresh assessment.
+  const urlParams = new URLSearchParams(window.location.search);
+  const sharedR = urlParams.get('r');
+  const sharedData = sharedR ? decodeResultsPayload(sharedR) : null;
+
+  if (sharedData) {
+    reportName = sharedData.nm || '';
+    displayResults(rankOf(sharedData.n), rankOf(sharedData.a), { justFinished: false });
+  } else {
+    renderIntro();
+  }
+})();
+</script>
